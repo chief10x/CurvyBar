@@ -52,6 +52,8 @@ class CurvyBottomNavigation @JvmOverloads constructor(
     /* Radius of the FAB, used in Point Calculations */
     private val fabRadius = fabWidth / 2
 
+    private var fab: FloatingActionButton? = null
+
     /* Curve Points */
     private val firstCurveStartPoint = PointF()
     private val firstCurveControlPointA = PointF()
@@ -85,6 +87,13 @@ class CurvyBottomNavigation @JvmOverloads constructor(
         /* I had a very funny issue of placing this code in onSizeChanged :D,
             Took me a nice 20 minutes to find out */
         makeViews()
+    }
+
+    /* Lambda Rules Baby! */
+    fun setFabClickListener(onClick: () -> Unit) {
+        fab?.setOnClickListener {
+            onClick()
+        }
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -156,7 +165,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
     private fun addFab() {
 
-        val fab = FloatingActionButton(context)
+        fab = FloatingActionButton(context)
 
         val params = LayoutParams(
             LayoutParams.WRAP_CONTENT,
@@ -168,15 +177,11 @@ class CurvyBottomNavigation @JvmOverloads constructor(
         params.addRule(CENTER_HORIZONTAL, TRUE)
         params.addRule(ALIGN_PARENT_BOTTOM, TRUE)
 
-        fab.apply {
+        fab?.apply {
 
             layoutParams = params
             translationZ = 2f
             size = FloatingActionButton.SIZE_NORMAL
-
-            setOnClickListener {
-
-            }
         }
 
         addView(fab, params)

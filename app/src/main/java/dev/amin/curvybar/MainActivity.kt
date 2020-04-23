@@ -2,6 +2,7 @@ package dev.amin.curvybar
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -11,5 +12,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         curvyBar.init()
+
+        curvyBar.setFabClickListener {
+            Toast.makeText(this, "Hey Fella", Toast.LENGTH_LONG).show()
+        }
     }
 }
