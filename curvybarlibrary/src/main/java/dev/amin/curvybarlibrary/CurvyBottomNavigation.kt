@@ -6,6 +6,8 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.widget.RelativeLayout
 import androidx.core.content.res.ResourcesCompat
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class CurvyBottomNavigation @JvmOverloads constructor(
     context: Context,
@@ -40,6 +42,13 @@ class CurvyBottomNavigation @JvmOverloads constructor(
     private val fabWidth =
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56f, resources.displayMetrics)
 
+    private val fabMarginBottom =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36f, resources.displayMetrics)
+
+    /* Height of the NavigationBar, which is used also for
+        the starting point of the paints  */
+    private val barHeight = context.resources.getDimension(R.dimen.navBarHeight)
+
     /* Radius of the FAB, used in Point Calculations */
     private val fabRadius = fabWidth / 2
 
@@ -55,36 +64,133 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
     fun init() {
 
+        // Set the exact height for View to be neat!
+        val params = layoutParams
+
+        // Height = barHeight - fabHeight + marginBottom
+        params.height = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            barHeight - fabWidth + fabMarginBottom,
+            resources.displayMetrics
+        ).toInt()
+
+        // Stretch it all the way across
+        params.width = LayoutParams.MATCH_PARENT
+
+        layoutParams = params
+
+        // I like my views clean brudda
         setBackgroundColor(Color.TRANSPARENT)
 
-        // Find a better way to cancel the middle menu item. or use it as an action
+        /* I had a very funny issue of placing this code in onSizeChanged :D,
+            Took me a nice 20 minutes to find out */
+        makeViews()
     }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
+        // Draw the whitish background
         canvas?.drawPath(path, backgroundPaint)
 
+        // Draw the stroke
         canvas?.drawPath(strokePath, strokePaint)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
+        /* Points are all the anchor points
+            used to draw the paths */
         calculatePoints()
 
+        /* Makes the Path which is used for
+            drawing the background */
         initPath()
 
+        /* Makes the Path which is used to draw
+            the stroke, I should implement custom elevation some day :)*/
         initStrokePath()
+
+        // Rise from the ashes
+        invalidate()
+    }
+
+    /***
+     * This guy just creates and then
+     * adds the NavigationBar and
+     * the FloatingActionButton */
+    private fun makeViews() {
+
+        /* Remove in case of force refresh */
+        removeAllViews()
+
+        addNavigationBar()
+
+        addFab()
+    }
+
+    private fun addNavigationBar() {
+
+        val navigationBar = BottomNavigationView(context)
+
+        val params = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            barHeight.toInt()
+        )
+
+        params.addRule(ALIGN_PARENT_START, TRUE)
+        params.addRule(ALIGN_PARENT_BOTTOM, TRUE)
+
+        navigationBar.apply {
+
+            setBackgroundColor(Color.TRANSPARENT)
+            layoutParams = params
+            translationZ = 1f
+        }
+
+        addView(navigationBar, params)
+
+        invalidate()
+    }
+
+    private fun addFab() {
+
+        val fab = FloatingActionButton(context)
+
+        val params = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        )
+
+        params.bottomMargin = fabMarginBottom.toInt()
+
+        params.addRule(CENTER_HORIZONTAL, TRUE)
+        params.addRule(ALIGN_PARENT_BOTTOM, TRUE)
+
+        fab.apply {
+
+            layoutParams = params
+            translationZ = 2f
+            size = FloatingActionButton.SIZE_NORMAL
+
+            setOnClickListener {
+
+            }
+        }
+
+        addView(fab, params)
 
         invalidate()
     }
 
     private fun calculatePoints() {
 
+        val yStartingPoint = height - barHeight
+
         firstCurveStartPoint.apply {
             x = (width / 2) - fabWidth - fabRadius / 2
-            y = 0f
+            y = yStartingPoint
         }
 
         firstCurveControlPointA.apply {
@@ -94,7 +200,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
         firstCurveEndPoint.apply {
             x = width / 2f
-            y = fabWidth - fabRadius / 2
+            y = yStartingPoint + (fabWidth - fabRadius / 2)
         }
 
         firstCurveControlPointB.apply {
@@ -114,7 +220,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
         secondCurveEndPoint.apply {
             x = width / 2f + fabWidth + fabRadius / 2
-            y = 0f
+            y = yStartingPoint
         }
 
         secondCurveControlPointB.apply {
@@ -130,7 +236,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
         /* Cubic Quest Begins */
 
-        strokePath.moveTo(0f, 0f)
+        strokePath.moveTo(0f, firstCurveStartPoint.y)
 
         strokePath.lineTo(firstCurveStartPoint.x, firstCurveStartPoint.y)
 
@@ -147,11 +253,11 @@ class CurvyBottomNavigation @JvmOverloads constructor(
             secondCurveEndPoint.x, secondCurveEndPoint.y
         )
 
-        strokePath.lineTo(width - borderRadius, 0f)
+        strokePath.lineTo(width - borderRadius, firstCurveStartPoint.y)
 
         // Now let's go vertically down by a small percentage
 
-        strokePath.lineTo(width - borderRadius, shadowHeight)
+        strokePath.lineTo(width - borderRadius, firstCurveStartPoint.y + shadowHeight)
 
         strokePath.lineTo(secondCurveEndPoint.x, secondCurveEndPoint.y + shadowHeight)
 
@@ -167,7 +273,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
             firstCurveStartPoint.x, firstCurveStartPoint.y + shadowHeight
         )
 
-        strokePath.lineTo(0f, shadowHeight)
+        strokePath.lineTo(0f, firstCurveStartPoint.y + shadowHeight)
 
         /* End of Cubic Hunt era */
 
@@ -178,9 +284,9 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
         /* Cubic Quest Begins */
 
-        path.moveTo(0f, borderRadius)
+        path.moveTo(0f, firstCurveStartPoint.y)
 
-        path.quadTo(0f, 0f, borderRadius, 0f)
+        //path.quadTo(0f, 0f, borderRadius, 0f)
 
         path.lineTo(firstCurveStartPoint.x, firstCurveStartPoint.y)
 
@@ -197,7 +303,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
             secondCurveEndPoint.x, secondCurveEndPoint.y
         )
 
-        path.lineTo(width - borderRadius, 0f)
+        path.lineTo(width - borderRadius, firstCurveStartPoint.y)
 
         /* End of Cubic Hunt era */
 
