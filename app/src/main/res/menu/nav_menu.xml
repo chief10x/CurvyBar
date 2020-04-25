@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_home"
+        android:icon="@drawable/ic_home_white_24dp"
+        android:title="Home" />
+    <item
+        android:id="@+id/action_chart"
+        android:icon="@drawable/ic_chart_white_24dp"
+        android:title="Chart" />
+    <item
+        android:id="@+id/action_messages"
+        android:icon="@drawable/ic_message_white_24dp"
+        android:title="Messages" />
+    <item
+        android:id="@+id/action_stuff"
+        android:icon="@drawable/ic_settings_white_24dp"
+        android:title="Stuff" />
+</menu>
