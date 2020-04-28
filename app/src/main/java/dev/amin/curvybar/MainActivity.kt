@@ -16,5 +16,9 @@ class MainActivity : AppCompatActivity() {
         curvyBar.setFabClickListener {
             Toast.makeText(this, "Hey Fella", Toast.LENGTH_LONG).show()
         }
+
+        curvyBar.setFabIcon(R.drawable.ic_add_white_24dp)
+
+        curvyBar.setMenu(R.menu.nav_menu)
     }
 }
