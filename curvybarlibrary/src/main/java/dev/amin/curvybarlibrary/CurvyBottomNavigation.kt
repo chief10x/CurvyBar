@@ -4,10 +4,17 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.Menu
 import android.widget.RelativeLayout
+import androidx.annotation.DrawableRes
+import androidx.annotation.IntegerRes
+import androidx.annotation.MenuRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.ViewCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomnavigation.LabelVisibilityMode
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.util.HashMap
 
 class CurvyBottomNavigation @JvmOverloads constructor(
     context: Context,
@@ -54,6 +61,16 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
     private var fab: FloatingActionButton? = null
 
+    /***
+     * This is the navigationBar attached to the view,
+     * You can use it for everything
+     */
+    var navigationBar: BottomNavigationView? = null
+        set(value) {
+            if (field == null)
+                field = value
+        }
+
     /* Curve Points */
     private val firstCurveStartPoint = PointF()
     private val firstCurveControlPointA = PointF()
@@ -93,6 +110,24 @@ class CurvyBottomNavigation @JvmOverloads constructor(
     fun setFabClickListener(onClick: () -> Unit) {
         fab?.setOnClickListener {
             onClick()
+        }
+    }
+
+    fun setFabIcon(@DrawableRes icon: Int) {
+        fab?.setImageResource(icon)
+    }
+
+    fun setMenu(@MenuRes menu: Int) {
+
+        navigationBar?.apply {
+
+            inflateMenu(menu)
+
+            // Disable the Center Item which will be replaced with Fab
+            this.menu.getItem(2).isEnabled = false
+
+            // Always show the labels
+            labelVisibilityMode = LabelVisibilityMode.LABEL_VISIBILITY_LABELED
         }
     }
 
@@ -141,7 +176,7 @@ class CurvyBottomNavigation @JvmOverloads constructor(
 
     private fun addNavigationBar() {
 
-        val navigationBar = BottomNavigationView(context)
+        navigationBar = BottomNavigationView(context)
 
         val params = LayoutParams(
             LayoutParams.MATCH_PARENT,
@@ -151,16 +186,22 @@ class CurvyBottomNavigation @JvmOverloads constructor(
         params.addRule(ALIGN_PARENT_START, TRUE)
         params.addRule(ALIGN_PARENT_BOTTOM, TRUE)
 
-        navigationBar.apply {
+        navigationBar?.apply {
 
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams = params
+
+            /* Setting elevation and translationZ this low
+                was to get navBar behind the fab. I couldn't
+                 get fab up.
+                 Unfortunately fab has erectile dysfunction, so
+                 we set the standards low :)
+                 */
             translationZ = 1f
+            elevation = 0f
         }
 
         addView(navigationBar, params)
-
-        invalidate()
     }
 
     private fun addFab() {
@@ -180,13 +221,10 @@ class CurvyBottomNavigation @JvmOverloads constructor(
         fab?.apply {
 
             layoutParams = params
-            translationZ = 2f
             size = FloatingActionButton.SIZE_NORMAL
         }
 
         addView(fab, params)
-
-        invalidate()
     }
 
     private fun calculatePoints() {
